@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(
-    name='dynamic-cloth-folding',
+    name='DualRL',
     version='0.2.1dev',
     packages=find_packages(),
     license='MIT License',

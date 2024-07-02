@@ -138,7 +138,7 @@ def experiment(variant):
         algorithm.train()
 
     vec_env.close()
-    logger.debug("Closed subprocesses")
+    logger.debug("Closed subprocesses: make_worker_env_function()")
     return
 
 
@@ -153,3 +153,6 @@ if __name__ == "__main__":
 
     logger.debug('Training started')
     experiment(variant)
+    
+    
+   

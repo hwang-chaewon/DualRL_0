@@ -133,7 +133,7 @@ def argsparser():
 
     # Train
     parser.add_argument('--train-steps', default=100, type=int)  # Per cycle #1000
-    parser.add_argument('--num-epochs', default=5, type=int)  #100
+    parser.add_argument('--num-epochs', default=3, type=int)  #100
     parser.add_argument('--save-policy-every-epoch', default=1, type=int)
     parser.add_argument('--num-cycles', default=5, type=int)  # Per epoch #20
     parser.add_argument('--num-eval-rollouts', type=int, default=3)  #20
@@ -407,8 +407,7 @@ def setup_save_folder(variant):
 
 def setup_training_device():
     if torch.cuda.is_available():
-        logger.debug("Training with GPU")
-        print("GPU사용한다!!!!!")
+        logger.debug("\nTraining with GPU\n")
         pytorch_util.set_gpu_mode(True)
     else:
-        logger.debug("Training with CPU")
+        logger.debug("\nTraining with CPU\n")
