@@ -859,9 +859,13 @@ class ClothEnv_(object):
 
         return corner_image, eval_image, cnn_color_image_full, cnn_color_image, cnn_image
 
-
 class ClothEnv(ClothEnv_, EzPickle):
     def __init__(self, **kwargs):
         ClothEnv_.__init__(
             self, **kwargs)
         EzPickle.__init__(self)
+        # ClothEnv_.setup_viewer(self)
+        # ClothEnv_.reset_camera(self)
+        # ClothEnv_.setup_initial_state_and_sim(self, model_kwargs)
+        # ClothEnv_.set_robot_initial_joints(self)
+        # ClothEnv_.step_env(self)
