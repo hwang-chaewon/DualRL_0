@@ -256,8 +256,10 @@ class ClothEnv_(object):
         if self.has_viewer:
             if not self.viewer is None:
                 del self.viewer
-            self.viewer = mujoco_py.MjRenderContextOffscreen(
-                self.sim, device_id=-1)
+            # self.viewer = mujoco_py.MjRenderContextOffscreen(
+            #     self.sim, device_id=-1)
+            self.viewer = mujoco_py.MjRenderContextWindow(
+                self.sim)
             self.viewer.vopt.geomgroup[0] = 0
             self.viewer.vopt.geomgroup[1] = 1
 

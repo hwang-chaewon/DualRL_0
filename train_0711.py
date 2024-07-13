@@ -35,9 +35,9 @@ def experiment(variant):
     eval_env = gym.make('DualRLenv',**variant['env_kwargs'],randomization_kwargs=variant['randomization_kwargs'])
         
     ########### 
-    #model_kwargs, model_numerical_values = eval_env.build_xml_kwargs_and_numerical_values(randomize=eval_env.randomization_kwargs['dynamics_randomization'])
-    #eval_env.setup_viewer()
-    #eval_env.setup_initial_state_and_sim(model_kwargs)
+    model_kwargs, model_numerical_values = eval_env.build_xml_kwargs_and_numerical_values(randomize=eval_env.randomization_kwargs['dynamics_randomization'])
+    eval_env.setup_viewer()
+    eval_env.setup_initial_state_and_sim(model_kwargs)
     ###########
     
 
@@ -155,7 +155,7 @@ def experiment(variant):
         obs=randomized_eval_env.reset()
         randomized_eval_env.setup_viewer()
         for t in range(20):
-            print("뭐야 왜 시각화는 안됨????????")
+            print("tried to visualize simulator environment with render")
             randomized_eval_env.viewer.render(50,50)
             action = randomized_eval_env.action_space.sample()
             observation, reward, done, info = randomized_eval_env.step(action)
