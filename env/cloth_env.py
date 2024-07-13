@@ -256,12 +256,15 @@ class ClothEnv_(object):
         if self.has_viewer:
             if not self.viewer is None:
                 del self.viewer
+            self.viewer = mujoco_py.MjRenderContextWindow(
+            self.sim)
             # self.viewer = mujoco_py.MjRenderContextOffscreen(
             #     self.sim, device_id=-1)
-            self.viewer = mujoco_py.MjRenderContextWindow(
-                self.sim)
             self.viewer.vopt.geomgroup[0] = 0
             self.viewer.vopt.geomgroup[1] = 1
+
+            # self.viewer = self.sim.render(600,600)
+            # self.viewer.render(600,600)
 
     def dump_xml_models(self):
         with open(f"{self.save_folder}/compiled_mujoco_model_no_inertias.xml", "w") as f:
