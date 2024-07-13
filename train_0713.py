@@ -75,8 +75,11 @@ def experiment(variant):
         added_fc_input_size=env_dims['added_fc_input_size'],
         **variant['policy_kwargs'],
     )
+    print("policy from sac_policies.TanhScriptPolicy: ", policy)
 
     eval_policy = sac_policies.MakeDeterministic(policy)
+
+    print("eval_policy from sac_policies.MakeDeterministic: ", eval_policy)
 
     success_test = success_rate_test.SuccessRateTest(
         env=randomized_eval_env,
@@ -87,6 +90,9 @@ def experiment(variant):
                      'corner_1', 'corner_2', 'corner_3', 'corner_sum_error'],
         **variant['eval_kwargs'],
     )
+
+    # print("success test: ", success_test)
+
     real_corner_test = real_corner_prediction_test.RealCornerPredictionTest(
         env=randomized_eval_env,
         policy=eval_policy,
@@ -95,9 +101,13 @@ def experiment(variant):
         metric_keys=[
             'corner_error'],
         **variant['eval_kwargs'],)
+    
+    # print("real_corner_test: ", real_corner_test)
 
     evaluation_suite = eval_suite.EvalTestSuite(
         tests=[success_test, real_corner_test])
+    
+    # print("evaluation_suite: ", evaluation_suite)
 
     def make_worker_env_function():
         return general_utils.get_randomized_env(wrappers.NormalizedBoxEnv(cloth_env.ClothEnv(**variant['env_kwargs'], randomization_kwargs=variant['randomization_kwargs'])), randomization_kwargs=variant['randomization_kwargs'])
@@ -114,6 +124,8 @@ def experiment(variant):
         **variant['path_collector_kwargs'],
     )
 
+    # print("exploration_path_collector: ", exploration_path_collector)
+
     replay_buffer = future_obs_dict_replay_buffer.FutureObsDictRelabelingBuffer(
         ob_spaces=copy.deepcopy(eval_env.observation_space.spaces),
         action_space=copy.deepcopy(eval_env.action_space),
@@ -123,6 +135,8 @@ def experiment(variant):
         achieved_goal_key=env_keys['achieved_goal_key'],
         **variant['replay_buffer_kwargs']
     )
+
+    # print("replay_buffer: ", replay_buffer)
 
     trainer = sac.SACTrainer(
         policy_target_entropy=-np.prod(
@@ -134,7 +148,9 @@ def experiment(variant):
         target_qf2=target_qf2,
         **variant['trainer_kwargs']
     )
+    # print("SACtrainer: ", trainer)
     trainer = her.ClothSacHERTrainer(trainer)
+    # print("ClothSacHERTrainer: ", trainer)
 
     algorithm = torch_rl_algorithm.TorchBatchRLAlgorithm(
         eval_suite=evaluation_suite,
@@ -145,26 +161,28 @@ def experiment(variant):
         policy_kwargs=variant['policy_kwargs'],
         **variant['algorithm_kwargs']
     )
+    # print("algorithm: ", algorithm)
+
     algorithm.to(pytorch_util.device)
 
     with mujoco_py.ignore_mujoco_warnings():
         algorithm.train()
 
     #240712
-    for episode in range(5):
-        obs=randomized_eval_env.reset()
-        randomized_eval_env.setup_viewer()
-        for t in range(20):
-            print("tried to visualize simulator environment with render")
-            randomized_eval_env.viewer.render(600,600)
-            action = randomized_eval_env.action_space.sample()
-            observation, reward, done, info = randomized_eval_env.step(action)
-            time.sleep(0.1)
-            print(observation, reward, done, info)
-            # epoch, cycle등을 작게 했을 때는 reward가 계속 -1로, improve되지 않았음
-            if done:
-                break
-    randomized_eval_env.close()
+    # for episode in range(5):
+    #     obs=randomized_eval_env.reset()
+    #     randomized_eval_env.setup_viewer()
+    #     for t in range(20):
+    #         print("tried to visualize simulator environment with render")
+    #         randomized_eval_env.viewer.render(600,600)
+    #         action = randomized_eval_env.action_space.sample() #여기서 action 뽑아내는 거를 policy를 이용해서 뽑아야 할거같은데?
+    #         observation, reward, done, info = randomized_eval_env.step(action)
+    #         time.sleep(0.1)
+    #         print(observation, reward, done, info)
+    #         # epoch, cycle등을 작게 했을 때는 reward가 계속 -1로, improve되지 않았음
+    #         if done:
+    #             break
+    # randomized_eval_env.close()
     #
 
     vec_env.close()
@@ -174,7 +192,7 @@ def experiment(variant):
 
 if __name__ == "__main__":
     args = general_utils.argsparser()
-    variant = general_utils.get_variant(args)
+    variant = general_utils.get_variant(args, algorithm="SAC")
 
     general_utils.setup_training_device()
     general_utils.setup_save_folder(variant)

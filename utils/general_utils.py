@@ -132,11 +132,11 @@ def argsparser():
     parser.add_argument('--num-processes', type=int, default=1)
 
     # Train
-    parser.add_argument('--train-steps', default=100, type=int)  # Per cycle #1000
-    parser.add_argument('--num-epochs', default=1, type=int)  #100
+    parser.add_argument('--train-steps', default=1000, type=int)  # Per cycle #1000
+    parser.add_argument('--num-epochs', default=100, type=int)  #100
     parser.add_argument('--save-policy-every-epoch', default=1, type=int)
-    parser.add_argument('--num-cycles', default=1, type=int)  # Per epoch #20
-    parser.add_argument('--num-eval-rollouts', type=int, default=5)  #20
+    parser.add_argument('--num-cycles', default=20, type=int)  # Per epoch #20
+    parser.add_argument('--num-eval-rollouts', type=int, default=20)  #20
     parser.add_argument('--batch-size', type=int, default=256) #256
     parser.add_argument('--discount', type=float, default=0.99)
     parser.add_argument('--corner-prediction-loss-coef',
@@ -225,9 +225,10 @@ def argsparser():
     return args
 
 
-def get_general_kwargs(args, save_folder, title):
+def get_general_kwargs(args, save_folder, title, algorithm):
     kwargs = dict(
-        algorithm="SAC",
+        # algorithm="SAC",
+        algorithm=algorithm,
         title=title,
         save_folder=save_folder,
         random_seed=args.run,
@@ -374,11 +375,11 @@ def get_policy_kwargs(args):
     return policy_kwargs
 
 
-def get_variant(args):
+def get_variant(args, algorithm):
     title = args.title + "-run-" + str(args.run)
     save_folder = os.path.join(os.path.abspath("./"), "trainings", title)
 
-    variant = get_general_kwargs(args, save_folder, title)
+    variant = get_general_kwargs(args, save_folder, title, algorithm)
     variant['randomization_kwargs'] = get_randomization_kwargs(args)
     variant['value_function_kwargs'] = get_value_function_kwargs(args)
     variant['policy_kwargs'] = get_policy_kwargs(args)

@@ -21,6 +21,14 @@ class DDPGTrainer(TorchTrainer):
             policy,
             target_policy,
 
+            #안쓰지만 코드상 받는 것
+            soft_target_tau,
+            target_update_period,
+            policy_lr,
+            qf_lr,
+            use_automatic_entropy_tuning,
+            corner_prediction_loss_coef,
+
             discount=0.99,
             reward_scale=1.0,
 
