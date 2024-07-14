@@ -133,11 +133,11 @@ def argsparser():
 
     # Train
     parser.add_argument('--train-steps', default=1000, type=int)  # Per cycle #1000
-    parser.add_argument('--num-epochs', default=100, type=int)  #100
+    parser.add_argument('--num-epochs', default=10, type=int)  #100
     parser.add_argument('--save-policy-every-epoch', default=1, type=int)
-    parser.add_argument('--num-cycles', default=20, type=int)  # Per epoch #20
+    parser.add_argument('--num-cycles', default=15, type=int)  # Per epoch #20
     parser.add_argument('--num-eval-rollouts', type=int, default=20)  #20
-    parser.add_argument('--batch-size', type=int, default=256) #256
+    parser.add_argument('--batch-size', type=int, default=128) #256
     parser.add_argument('--discount', type=float, default=0.99)
     parser.add_argument('--corner-prediction-loss-coef',
                         type=float, default=0.001)

@@ -262,6 +262,8 @@ class ClothEnv_(object):
             self.sim)
             # self.viewer = mujoco_py.MjRenderContext(
             # self.sim)
+            # self.viewer = mujoco_py.MjViewer(
+            # self.sim)
             self.viewer.vopt.geomgroup[0] = 0
             self.viewer.vopt.geomgroup[1] = 1
 
