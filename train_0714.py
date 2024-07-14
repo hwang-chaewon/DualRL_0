@@ -9,7 +9,7 @@ import logging
 import time
 
 from rlkit.torch import pytorch_util, networks, torch_rl_algorithm
-from rlkit.torch.ddpg import policies as ddpg_policies, ddpg
+from rlkit.torch.sac import policies as sac_policies, sac
 from rlkit.torch.her.cloth import her
 from rlkit.launchers import launcher_util
 from rlkit.envs import wrappers
@@ -29,15 +29,15 @@ logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
 
 def experiment(variant):
-    # eval_env = cloth_env.ClothEnv(
-    #     **variant['env_kwargs'], randomization_kwargs=variant['randomization_kwargs'])
+    eval_env = cloth_env.ClothEnv(
+        **variant['env_kwargs'], randomization_kwargs=variant['randomization_kwargs'])
 
-    eval_env = gym.make('DualRLenv-v0',**variant['env_kwargs'],randomization_kwargs=variant['randomization_kwargs'])
+    # eval_env = gym.make('DualRLenv-v0',**variant['env_kwargs'],randomization_kwargs=variant['randomization_kwargs'])
         
     ########### 
-    model_kwargs, model_numerical_values = eval_env.build_xml_kwargs_and_numerical_values(randomize=eval_env.randomization_kwargs['dynamics_randomization'])
-    eval_env.setup_viewer()
-    eval_env.setup_initial_state_and_sim(model_kwargs)
+    # model_kwargs, model_numerical_values = eval_env.build_xml_kwargs_and_numerical_values(randomize=eval_env.randomization_kwargs['dynamics_randomization'])
+    # eval_env.setup_viewer()
+    # eval_env.setup_initial_state_and_sim(model_kwargs)
     ###########
     
 
@@ -70,21 +70,16 @@ def experiment(variant):
         hidden_sizes=[fc_width for _ in range(fc_depth)],
     )
 
-    policy = ddpg_policies.TanhScriptPolicy(
+    policy = sac_policies.TanhScriptPolicy(
         output_size=env_dims['action_dim'],
         added_fc_input_size=env_dims['added_fc_input_size'],
         **variant['policy_kwargs'],
     )
-    target_policy = ddpg_policies.TanhScriptPolicy(
-        output_size=env_dims['action_dim'],
-        added_fc_input_size=env_dims['added_fc_input_size'],
-        **variant['policy_kwargs'],
-    )
-    print("policy from policies.TanhScriptPolicy: ", policy)
+    print("policy from sac_policies.TanhScriptPolicy: ", policy)
 
-    eval_policy = ddpg_policies.MakeDeterministic(policy)
+    eval_policy = sac_policies.MakeDeterministic(policy)
 
-    print("eval_policy from policies.MakeDeterministic: ", eval_policy)
+    print("eval_policy from sac_policies.MakeDeterministic: ", eval_policy)
 
     success_test = success_rate_test.SuccessRateTest(
         env=randomized_eval_env,
@@ -143,17 +138,18 @@ def experiment(variant):
 
     # print("replay_buffer: ", replay_buffer)
 
-    trainer = ddpg.DDPGTrainer(
-        # policy_target_entropy=-np.prod(eval_env.action_space.shape).item(),
-        qf=qf1,
-        target_qf=target_qf1,
+    trainer = sac.SACTrainer(
+        policy_target_entropy=-np.prod(
+            eval_env.action_space.shape).item(),
         policy=policy,
-        target_policy=target_policy,
+        qf1=qf1,
+        qf2=qf2,
+        target_qf1=target_qf1,
+        target_qf2=target_qf2,
         **variant['trainer_kwargs']
     )
-    
     # print("SACtrainer: ", trainer)
-    trainer = her.ClothDDPGHERTrainer(trainer)
+    trainer = her.ClothSacHERTrainer(trainer)
     # print("ClothSacHERTrainer: ", trainer)
 
     algorithm = torch_rl_algorithm.TorchBatchRLAlgorithm(
@@ -196,7 +192,7 @@ def experiment(variant):
 
 if __name__ == "__main__":
     args = general_utils.argsparser()
-    variant = general_utils.get_variant(args, algorithm="DDPG")
+    variant = general_utils.get_variant(args, algorithm="SAC")
 
     general_utils.setup_training_device()
     general_utils.setup_save_folder(variant)

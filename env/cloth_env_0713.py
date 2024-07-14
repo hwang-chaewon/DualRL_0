@@ -256,14 +256,15 @@ class ClothEnv_(object):
         if self.has_viewer:
             if not self.viewer is None:
                 del self.viewer
-            # self.viewer = mujoco_py.MjRenderContextOffscreen(
-            #     self.sim, device_id=-1)
             self.viewer = mujoco_py.MjRenderContextWindow(
             self.sim)
-            # self.viewer = mujoco_py.MjRenderContext(
-            # self.sim)
+            # self.viewer = mujoco_py.MjRenderContextOffscreen(
+            #     self.sim, device_id=-1)
             self.viewer.vopt.geomgroup[0] = 0
             self.viewer.vopt.geomgroup[1] = 1
+
+            # self.viewer = self.sim.render(600,600)
+            # self.viewer.render(600,600)
 
     def dump_xml_models(self):
         with open(f"{self.save_folder}/compiled_mujoco_model_no_inertias.xml", "w") as f:
@@ -635,9 +636,7 @@ class ClothEnv_(object):
         width = self.randomization_kwargs['camera_config']['width']
         height = self.randomization_kwargs['camera_config']['height']
 
-        # self.viewer.render(width, height, camera_id)
-        # self.viewer.render(self.sim)
-        # self.viewer.render(self)
+        self.viewer.render(width, height, camera_id)
         image_obs = copy.deepcopy(
             self.viewer.read_pixels(width, height, depth=False))
 
@@ -808,9 +807,7 @@ class ClothEnv_(object):
         camera_matrix, camera_transformation = self.get_camera_matrices(
             camera, width, height)
         camera_id = self.sim.model.camera_name2id(camera)
-        # self.viewer.render(width, height, camera_id)
-        # self.viewer.render(self.sim)
-        # self.viewer.render(self)
+        self.viewer.render(width, height, camera_id)
         data = np.float32(self.viewer.read_pixels(
             width, height, depth=False)).copy()
         data = np.float32(data[::-1, :, :]).copy()

@@ -325,7 +325,7 @@ class MjRenderContextWindow(MjRenderContext):
     def window(self):
         return self.opengl_context.window
 
-    def render(self, MjSim sim):
+    def render(self):
         if self.window is None or glfw.window_should_close(self.window):
             return
 
