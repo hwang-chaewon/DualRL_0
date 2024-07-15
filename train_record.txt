@@ -1,0 +1,61 @@
+=====240714 22시 - 0715 00시====================================================
+parser.add_argument('--train-steps', default=1000, type=int)  # Per cycle #1000
+parser.add_argument('--num-epochs', default=10, type=int)  #100
+parser.add_argument('--save-policy-every-epoch', default=1, type=int)
+parser.add_argument('--num-cycles', default=15, type=int)  # Per epoch #20
+parser.add_argument('--num-eval-rollouts', type=int, default=20)  #20
+parser.add_argument('--batch-size', type=int, default=128) #256
+parser.add_argument('--discount', type=float, default=0.99)
+parser.add_argument('--corner-prediction-loss-coef', type=float, default=0.001)
+------cycle 11 4 에서 RuntimeError: CUDA error: unspecified launch failure-------
+=================================================================================
+
+=====240715 00시 - 0715 08시====================================================
+parser.add_argument('--train-steps', default=1000, type=int)  # Per cycle #1000
+parser.add_argument('--num-epochs', default=10, type=int)  #100
+parser.add_argument('--save-policy-every-epoch', default=1, type=int)
+parser.add_argument('--num-cycles', default=15, type=int)  # Per epoch #20
+parser.add_argument('--num-eval-rollouts', type=int, default=20)  #20
+parser.add_argument('--batch-size', type=int, default=64) #256
+parser.add_argument('--discount', type=float, default=0.99)
+parser.add_argument('--corner-prediction-loss-coef', type=float, default=0.001)
+------------------------------------------------------------------------------
+이 옵션으로 했을 때, 끝까지 train 성공
+------------------------------------------------------------------------------
+    for episode in range(5):
+        obs=randomized_eval_env.reset()
+        randomized_eval_env.setup_viewer()
+        for t in range(20):
+            print("tried to visualize simulator environment with render")
+            randomized_eval_env.viewer.render(600,600)
+            action = randomized_eval_env.action_space.sample() #여기서 action 뽑아내는 거를 policy를 이용해서 뽑아야 할거같은데?
+            observation, reward, done, info = randomized_eval_env.step(action)
+            time.sleep(0.1)
+            print(observation, reward, done, info)
+            if done:
+                break
+    randomized_eval_env.close()
+를 했을 때 결과: reward가 -1로 계속 고정. policy를 활용하지 않고 sample로 action을 뽑아내서 그런 것 같음
+마지막 iteration의 터미널 출력 결과는 아래와 같음
+tried to visualize simulator environment with render
+{'achieved_goal': array([-0.00732867,  0.02511729,  0.10880819, -0.149877  ,  0.01552053,
+       -0.0444171 , -0.12855489, -0.07986969, -0.05457563, -0.00642342,
+       -0.03082884,  0.0038191 , -0.01248589, -0.10743024, -0.05799674,
+       -0.10472589, -0.13534605, -0.05611385]), 'desired_goal': array([ 0.00058571, -0.1916583 , -0.05673443, -0.19424628, -0.1916583 ,
+       -0.05673443, -0.19424628, -0.09995588, -0.05673443,  0.00058571,
+       -0.09995586, -0.05673443,  0.00058571, -0.19737208, -0.05673443,
+       -0.19424628, -0.19737208, -0.05673443]), 'image': array([0.65098039, 0.54117647, 0.50980392, ..., 0.50980392, 0.50980392,
+       0.51764706]), 'observation': array([-0.10472589, -0.13534605, -0.05611385, -0.12855489, -0.07986969,
+       -0.05457563, -0.149877  ,  0.01552053, -0.0444171 , -0.10722628,
+       -0.0986541 , -0.05694274, -0.08126019, -0.06433588,  0.02005203,
+       -0.06535916,  0.02579864,  0.00230104, -0.01248589, -0.10743024,
+       -0.05799674, -0.00642342, -0.03082884,  0.0038191 , -0.00732867,
+        0.02511729,  0.10880819,  0.16927548,  0.12167844, -0.04112389,
+        0.40207073,  0.20495569, -0.21933281,  0.66824463,  0.28532607,
+        0.05093161,  0.0543573 ,  0.14173656,  0.12219584,  0.030416  ,
+        0.08142872,  0.12074487,  0.57936004,  0.04808146, -0.01547434,
+       -0.00106644,  0.01280476,  0.01787795,  0.14144773, -0.14297112,
+        0.2953924 ,  0.        ,  0.        ,  0.        ]), 'robot_observation': array([ 0.3192246 , -0.2361058 ,  0.88156378,  0.        ,  0.        ,
+        0.        ,  0.        ,  0.        ,  0.        ])} -1.0 False {'reward': -1.0, 'is_success': False, 'delta_size': 0.96685314, 'ctrl_error': 0.02141597534059583, 'env_memory_usage': 5280768000, 'corner_sum_error': 0.6849115913870037, 'corner_0': 0.21223435108678765, 'corner_1': 0.27287113440086597, 'corner_2': 0.1089105849190691, 'corner_3': 0.09089552098028093, 'corner_positions': array([ 0.1420255 ,  0.43470502,  0.44815502, -0.11096147,  0.55965256,
+        0.53710902,  0.71773048,  0.41107188])}
+=================================================================================
