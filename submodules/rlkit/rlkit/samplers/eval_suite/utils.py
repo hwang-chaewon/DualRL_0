@@ -50,5 +50,5 @@ def save_regular_images(env, save_folder, prefix, epoch, step_number, aux_output
     cv2.imwrite(f'{save_folder}/epochs/{epoch}/{prefix}/eval_images/{str(step_number).zfill(3)}.png', eval_image)
     cv2.imwrite(f'{save_folder}/epochs/{epoch}/{prefix}/cnn_images/{str(step_number).zfill(3)}.png', cnn_image)
     #TODO: save also these images
-    #cv2.imwrite(f'{save_folder}/epochs/{epoch}/{prefix}/cnn_color_images/{str(step_number).zfill(3)}.png', cnn_color_image)
-    #cv2.imwrite(f'{save_folder}/epochs/{epoch}/{prefix}/cnn_color_full_images/{str(step_number).zfill(3)}.png', cnn_color_image_full)
+    cv2.imwrite(f'{save_folder}/epochs/{epoch}/{prefix}/cnn_color_images/{str(step_number).zfill(3)}.png', cnn_color_image)
+    cv2.imwrite(f'{save_folder}/epochs/{epoch}/{prefix}/cnn_color_full_images/{str(step_number).zfill(3)}.png', cnn_color_image_full)

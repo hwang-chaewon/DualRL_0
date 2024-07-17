@@ -29,10 +29,10 @@ logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
 
 def experiment(variant):
-    # eval_env = cloth_env.ClothEnv(
-    #     **variant['env_kwargs'], randomization_kwargs=variant['randomization_kwargs'])
+    eval_env = cloth_env.ClothEnv(
+        **variant['env_kwargs'], randomization_kwargs=variant['randomization_kwargs'])
 
-    eval_env = gym.make('DualRLenv-v0',**variant['env_kwargs'],randomization_kwargs=variant['randomization_kwargs'])
+    # eval_env = gym.make('DualRLenv-v0',**variant['env_kwargs'],randomization_kwargs=variant['randomization_kwargs'])
         
     ########### 
     # model_kwargs, model_numerical_values = eval_env.build_xml_kwargs_and_numerical_values(randomize=eval_env.randomization_kwargs['dynamics_randomization'])

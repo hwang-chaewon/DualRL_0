@@ -11,6 +11,8 @@ from segment_anything import SamPredictor, sam_model_registry
 from depth_anything.dpt import DepthAnything
 from depth_anything.util.transform import Resize, NormalizeImage, PrepareForNet
 
+from env import cloth_env
+
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -107,14 +109,32 @@ def calculate_areas_for_image(depth_image_path, mask_image_path, fx, fy, cx, cy)
         pixel_areas_masked, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U
     )
 
-    return pixel_areas_normalized
+    return pixel_areas_normalized, X1, X2, Y1, Y2
 
 
-def get_reward_folding(img):
-
+def get_reward_folding(img, camera_matrix):
+    cm=camera_matrix
     mask=segment(img)
     depth_map=get_depth_map(img)
-    
-    area=calculate_areas_for_image(depth_map, mask, fx, fy, cx, cy)
-    
+    # fx: focal length along x
+    # fy: focal length along y
+    # cx: principal point의 x좌표 (principal point: point that optical axis intersects the image plane)
+    # cy: principal point의 y좌표
+    # cloth_env.py의 get_camera_matrices()를 이용해야 할듯..
+# Camera matrix (mtx) has the form: (GPT 피셜. 확실하지 않음)
+# [ fx  0  cx ]
+# [  0 fy  cy ]
+# [  0  0   1 ]
+    area, X1,X2,Y1,Y2=calculate_areas_for_image(depth_map, mask, cm[0,0], cm[1,1], cm[0,2], cm[1,2])
     return area
+
+def get_reward_unfolding(pre_img, pre_cm, post_img, post_cm):
+    area_pre, X1_pre,X2_pre,Y1_pre,Y2_pre=get_reward_folding(pre_img, pre_cm)
+    area_post, X1_post,X2_post,Y1_post,Y2_post=get_reward_folding(post_img, post_cm)
+    X_m_pre=(X1_pre+X2_pre)/2
+    Y_m_pre=(Y1_pre+Y2_pre)/2
+    X_m_post=(X1_post+X2_post)/2
+    Y_m_post=(Y1_post+Y2_post)/2
+    reward_1=abs((area_pre-area_post))/2
+    reward_2=(abs(X2_pre-X2_post)+abs(Y2_pre-Y2_post)+abs(X_m_pre-X_m_post)+abs(Y_m_pre-Y_m_post))/4
+    return 2/(reward_1+reward_2) #차이를 최소화할 때 reward가 높아지도록

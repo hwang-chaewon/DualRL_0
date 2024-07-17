@@ -256,10 +256,10 @@ class ClothEnv_(object):
         if self.has_viewer:
             if not self.viewer is None:
                 del self.viewer
-            # self.viewer = mujoco_py.MjRenderContextOffscreen(
-            #     self.sim, device_id=-1)
-            self.viewer = mujoco_py.MjRenderContextWindow(
-            self.sim)
+            self.viewer = mujoco_py.MjRenderContextOffscreen(
+                self.sim, device_id=-1)
+            # self.viewer = mujoco_py.MjRenderContextWindow(
+            # self.sim)
             # self.viewer = mujoco_py.MjRenderContext(
             # self.sim)
             # self.viewer = mujoco_py.MjViewer(
@@ -637,7 +637,7 @@ class ClothEnv_(object):
         width = self.randomization_kwargs['camera_config']['width']
         height = self.randomization_kwargs['camera_config']['height']
 
-        # self.viewer.render(width, height, camera_id)
+        self.viewer.render(width, height, camera_id)
         # self.viewer.render(self.sim)
         # self.viewer.render(self)
         image_obs = copy.deepcopy(
@@ -810,7 +810,7 @@ class ClothEnv_(object):
         camera_matrix, camera_transformation = self.get_camera_matrices(
             camera, width, height)
         camera_id = self.sim.model.camera_name2id(camera)
-        # self.viewer.render(width, height, camera_id)
+        self.viewer.render(width, height, camera_id)
         # self.viewer.render(self.sim)
         # self.viewer.render(self)
         data = np.float32(self.viewer.read_pixels(
