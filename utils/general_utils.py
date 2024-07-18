@@ -132,18 +132,18 @@ def argsparser():
     parser.add_argument('--num-processes', type=int, default=1)
 
     # Train
-    parser.add_argument('--train-steps', default=100, type=int)  # Per cycle #1000
+    parser.add_argument('--train-steps', default=500, type=int)  # Per cycle #1000
     parser.add_argument('--num-epochs', default=3, type=int)  #100
     parser.add_argument('--save-policy-every-epoch', default=1, type=int)
-    parser.add_argument('--num-cycles', default=3, type=int)  # Per epoch #20
-    parser.add_argument('--num-eval-rollouts', type=int, default=3)  #20
+    parser.add_argument('--num-cycles', default=5, type=int)  # Per epoch #20
+    parser.add_argument('--num-eval-rollouts', type=int, default=5)  #20
     parser.add_argument('--batch-size', type=int, default=256) #256
     parser.add_argument('--discount', type=float, default=0.99)
     parser.add_argument('--corner-prediction-loss-coef',
                         type=float, default=0.001)
 
     # Sample images from evaluation
-    parser.add_argument('--save-images-every-epoch', default=10, type=int)
+    parser.add_argument('--save-images-every-epoch', default=1, type=int)  #10
 
     # FC network sizes
     parser.add_argument('--fc-layer-size', type=int, default=512)
