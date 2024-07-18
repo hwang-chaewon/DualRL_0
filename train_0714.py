@@ -15,6 +15,7 @@ from rlkit.launchers import launcher_util
 from rlkit.envs import wrappers
 
 from rlkit.samplers.eval_suite import success_rate_test, eval_suite, real_corner_prediction_test
+from rlkit.samplers.eval_suite import folding_test
 from rlkit.samplers import data_collector
 from rlkit.data_management import future_obs_dict_replay_buffer
 
@@ -93,7 +94,7 @@ def experiment(variant):
 
     # print("success test: ", success_test)
 
-    real_corner_test = real_corner_prediction_test.RealCornerPredictionTest(
+    real_corner_test = folding_test.FoldingTest(
         env=randomized_eval_env,
         policy=eval_policy,
         keys=env_keys,
