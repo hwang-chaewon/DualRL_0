@@ -132,7 +132,7 @@ def argsparser():
     parser.add_argument('--num-processes', type=int, default=1)
 
     # Train
-    parser.add_argument('--train-steps', default=500, type=int)  # Per cycle #1000
+    parser.add_argument('--train-steps', default=600, type=int)  # Per cycle #1000
     parser.add_argument('--num-epochs', default=3, type=int)  #100
     parser.add_argument('--save-policy-every-epoch', default=1, type=int)
     parser.add_argument('--num-cycles', default=5, type=int)  # Per epoch #20

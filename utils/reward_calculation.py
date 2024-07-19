@@ -46,7 +46,7 @@ def get_task_reward_function(constraints, single_goal_dim, sparse_dense, success
 
         task_rewards[fails] = fail_reward
 
-        print("reward: ", task_rewards)
+        # print("reward: ", task_rewards)
 
         return task_rewards
 

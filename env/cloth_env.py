@@ -1,3 +1,4 @@
+# task_definition의 constraint를 random_25로 변경하고, constraint['origin']대신 origin으로 robot end effector의 좌표를 사용
 import mujoco_py
 import osc_binding
 import cv2
@@ -64,6 +65,7 @@ class ClothEnv_(object):
         has_viewer=True,
         image_size=100,
     ):
+        #self: env.cloth_env.ClothEnv object
         self.albumentations_transform = A.Compose(
             [
                 A.RGBShift(r_shift_limit=15, g_shift_limit=15,
@@ -79,6 +81,7 @@ class ClothEnv_(object):
 
         self.model_kwargs_path = model_kwargs_path
         self.success_distance = success_distance
+        print("success distance: ", self.success_distance)
 
         self.process = psutil.Process(os.getpid())
         self.randomization_kwargs = randomization_kwargs
@@ -104,6 +107,7 @@ class ClothEnv_(object):
         self.image_obs_noise_mean = image_obs_noise_mean
         self.image_obs_noise_std = image_obs_noise_std
         self.robot_observation = robot_observation
+        print("robot_observation: ", self.robot_observation)
 
         self.max_close_steps = max_close_steps
         self.frame_stack = deque([], maxlen=self.frame_stack_size)
@@ -111,7 +115,7 @@ class ClothEnv_(object):
         self.limits_min = [-0.35, -0.35, 0.0]
         self.limits_max = [0.05, 0.05, 0.4]
 
-        self.single_goal_dim = 3
+        self.single_goal_dim = 3 #목표 위치가 몇 차원인지
         self.timestep = timestep
         self.control_frequency = control_frequency
 
@@ -144,6 +148,7 @@ class ClothEnv_(object):
                                            1, shape=(3,), dtype='float32')
 
         self.relative_origin = self.get_ee_position_W()
+        print("relative_origin: ", self.relative_origin)
         self.goal, self.goal_noise = self.sample_goal_I()
 
         self.reset_camera()
@@ -238,14 +243,18 @@ class ClothEnv_(object):
         self.corner_index_mapping = {"0": f"S{min_corner}_{max_corner}", "1": f"S{max_corner}_{max_corner}",
                                      "2": f"S{min_corner}_{min_corner}", "3": f"S{max_corner}_{min_corner}"}
         self.cloth_site_names = []
+        self.ee_origin_index_mapping = {"0": f"S-1_-1"}
+        
 
         for i in [min_corner, mid, max_corner]:
             for j in [min_corner, mid, max_corner]:
                 self.cloth_site_names.append(f"S{i}_{j}")
 
         # TODO: remove side effects from methods,
-        self.constraints = task_definitions.constraints["sideways"](
-            0, 4, 8, self.success_distance)
+        # self.constraints = task_definitions.constraints["sideways"](
+        #     0, 4, 8, self.success_distance)
+        self.constraints = task_definitions.constraints["random_25"](
+            0, 4, 8, self.success_distance, -0, -0)
 
         self.task_reward_function = reward_calculation.get_task_reward_function(
             self.constraints, self.single_goal_dim, self.sparse_dense, self.success_reward, self.fail_reward, self.extra_reward)
@@ -439,17 +448,15 @@ class ClothEnv_(object):
         return flattened_corners
 
     def get_corner_constraint_distances(self):
-        inv_corner_index_mapping = {v: k for k,
+        ee_origin_index_mapping= {v: k for k,
                                     v in self.corner_index_mapping.items()}
         distances = {"0": 0, "1": 0, "2": 0, "3": 0}
         for i, contraint in enumerate(self.constraints):
-            if contraint['origin'] in inv_corner_index_mapping.keys():
-                origin_pos = self.sim.data.get_site_xpos(
-                    contraint['origin']).copy() - self.relative_origin
-                target_pos = self.goal[i *
-                                       self.single_goal_dim:(i+1)*self.single_goal_dim]
-                distances[inv_corner_index_mapping[contraint['origin']]
-                          ] = np.linalg.norm(origin_pos-target_pos)
+            origin_pos = self.relative_origin
+            target_pos = self.goal[i *
+                                    self.single_goal_dim:(i+1)*self.single_goal_dim]
+            distances[ee_origin_index_mapping[contraint['origin']]
+                        ] = np.linalg.norm(origin_pos-target_pos)
         return distances
 
     def post_action(self, obs, raw_action, cosine_distance):
@@ -583,10 +590,10 @@ class ClothEnv_(object):
         }
         return entry
 
-    def get_ee_position_W(self):
+    def get_ee_position_W(self): #절대 위치. world position
         return self.sim.data.get_site_xpos(self.ee_site_name).copy()
 
-    def get_ee_position_I(self):
+    def get_ee_position_I(self): #상대 위치. 기준점으로부터 ee가 얼마나 떨어져 있는지
         return self.sim.data.get_site_xpos(self.ee_site_name).copy() - self.relative_origin
 
     def get_joint_positions(self):
@@ -617,9 +624,9 @@ class ClothEnv_(object):
 
     def get_cloth_edge_positions_W(self):
         positions = dict()
-        for i in range(9):
-            for j in range(9):
-                if (i in [0, 8]) or (j in [0, 8]):
+        for i in range(26): #9
+            for j in range(26): #9
+                if (i in [0, 25]) or (j in [0, 25]):  #[0,8]
                     site_name = f"S{i}_{j}"
                     positions[site_name] = self.sim.data.get_site_xpos(
                         site_name).copy()
@@ -721,6 +728,8 @@ class ClothEnv_(object):
 
             goal[i*self.single_goal_dim: (i+1) *
                  self.single_goal_dim] = target_pos + offset - self.relative_origin
+            
+        # print("goal: ", goal)
 
         return goal.copy(), noise
 
