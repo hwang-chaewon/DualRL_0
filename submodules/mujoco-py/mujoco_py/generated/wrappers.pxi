@@ -2245,7 +2245,8 @@ cdef class PyMjModel(object):
     @property
     def name_geomadr(self): return self._name_geomadr
     @property
-    def name_siteadr(self): return self._name_siteadr
+    #*******바꾼부분***************************
+    def name_siteadr(self): return self.ptr.name_siteadr
     @property
     def name_camadr(self): return self._name_camadr
     @property

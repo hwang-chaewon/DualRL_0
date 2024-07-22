@@ -130,7 +130,7 @@ def argsparser():
     parser.add_argument('--title', type=str, default="default")
     parser.add_argument('--run', type=int, default=0)
     parser.add_argument('--num-processes', type=int, default=1)
-
+    
     # Train
     parser.add_argument('--train-steps', default=1000, type=int)
     parser.add_argument('--num-epochs', default=100, type=int)

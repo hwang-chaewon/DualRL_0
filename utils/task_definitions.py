@@ -1,6 +1,7 @@
 
 
 constraints = dict(
+                    #*****************바꾼부분*******************#
                     # origin: robot의 현재 position
                         #robot의 initial joint value인 self.initial_qpos를 이용해서 현재 x,y위치를 구하는 방식으로 하던가 해야 할 듯.
                     # target: 모든 configuration을 하지는 않고, N개의 점을 찍는 것으로 하기

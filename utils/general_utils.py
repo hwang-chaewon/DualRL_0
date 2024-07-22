@@ -131,17 +131,17 @@ def argsparser():
     parser.add_argument('--run', type=int, default=0)
     parser.add_argument('--num-processes', type=int, default=1)
 
+    #***************바꾼부분*********************#
     # Train
-    parser.add_argument('--train-steps', default=600, type=int)  # Per cycle #1000
-    parser.add_argument('--num-epochs', default=3, type=int)  #100
+    parser.add_argument('--train-steps', default=100, type=int)  # Per cycle #1000
+    parser.add_argument('--num-epochs', default=1, type=int)  #100
     parser.add_argument('--save-policy-every-epoch', default=1, type=int)
-    parser.add_argument('--num-cycles', default=5, type=int)  # Per epoch #20
-    parser.add_argument('--num-eval-rollouts', type=int, default=5)  #20
+    parser.add_argument('--num-cycles', default=1, type=int)  # Per epoch #20
+    parser.add_argument('--num-eval-rollouts', type=int, default=10)  #20
     parser.add_argument('--batch-size', type=int, default=256) #256
     parser.add_argument('--discount', type=float, default=0.99)
     parser.add_argument('--corner-prediction-loss-coef',
                         type=float, default=0.001)
-
     # Sample images from evaluation
     parser.add_argument('--save-images-every-epoch', default=1, type=int)  #10
 
@@ -225,6 +225,7 @@ def argsparser():
     return args
 
 
+#************************************#
 def get_general_kwargs(args, save_folder, title, algorithm):
     kwargs = dict(
         # algorithm="SAC",
@@ -374,7 +375,7 @@ def get_policy_kwargs(args):
     )
     return policy_kwargs
 
-
+#************************************#
 def get_variant(args, algorithm):
     title = args.title + "-run-" + str(args.run)
     save_folder = os.path.join(os.path.abspath("./"), "trainings", title)

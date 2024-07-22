@@ -15,13 +15,11 @@ from rlkit.launchers import launcher_util
 from rlkit.envs import wrappers
 
 from rlkit.samplers.eval_suite import success_rate_test, eval_suite, real_corner_prediction_test
+#************************************#
 from rlkit.samplers.eval_suite import folding_test
 from rlkit.samplers import data_collector
 from rlkit.data_management import future_obs_dict_replay_buffer
 
-#240712: 계속 certificate 에러가 떠서 -> 그러나 아무 변화 없음
-# import ssl
-# ssl._create_default_https_context = ssl._create_unverified_context
 
 torch.cuda.empty_cache()
 gym.logger.set_level(50)
@@ -30,16 +28,10 @@ logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
 
 def experiment(variant):
+    #************************************#
     eval_env = cloth_env.ClothEnv(
         **variant['env_kwargs'], randomization_kwargs=variant['randomization_kwargs'])
-
     # eval_env = gym.make('DualRLenv-v0',**variant['env_kwargs'],randomization_kwargs=variant['randomization_kwargs'])
-        
-    ########### 
-    # model_kwargs, model_numerical_values = eval_env.build_xml_kwargs_and_numerical_values(randomize=eval_env.randomization_kwargs['dynamics_randomization'])
-    # eval_env.setup_viewer()
-    # eval_env.setup_initial_state_and_sim(model_kwargs)
-    ###########
     
 
     randomized_eval_env = general_utils.get_randomized_env(
@@ -89,6 +81,7 @@ def experiment(variant):
         **variant['eval_kwargs'],
     )
 
+    #************************************#
     real_corner_test = folding_test.FoldingTest(
         env=randomized_eval_env,
         policy=eval_policy,
@@ -97,10 +90,10 @@ def experiment(variant):
         metric_keys=[
             'corner_error'],
         **variant['eval_kwargs'],)
-    
+
     evaluation_suite = eval_suite.EvalTestSuite(
         tests=[success_test, real_corner_test])
-    
+
     def make_worker_env_function():
         return general_utils.get_randomized_env(wrappers.NormalizedBoxEnv(cloth_env.ClothEnv(**variant['env_kwargs'], randomization_kwargs=variant['randomization_kwargs'])), randomization_kwargs=variant['randomization_kwargs'])
 
@@ -147,12 +140,12 @@ def experiment(variant):
         policy_kwargs=variant['policy_kwargs'],
         **variant['algorithm_kwargs']
     )
-
     algorithm.to(pytorch_util.device)
 
     with mujoco_py.ignore_mujoco_warnings():
         algorithm.train()
 
+    #************************************#
     #240712
     # for episode in range(5):
     #     obs=randomized_eval_env.reset()
@@ -196,6 +189,7 @@ if __name__ == "__main__":
                 title='default', train_steps=500)
     """
     
+    #************************************#
     variant = general_utils.get_variant(args, algorithm="SAC")
 
     general_utils.setup_training_device()

@@ -6,7 +6,8 @@ from setuptools import find_packages, setup
 from distutils.command.build import build as DistutilsBuild
 
 
-with open(join("mujoco_py", "version.py")) as version_file:
+# with open(join("mujoco_py", "version.py")) as version_file:
+with open("/home/hcw/DualRL/submodules/mujoco-py/mujoco_py/version.py") as version_file:
     exec(version_file.read())
 
 
@@ -16,10 +17,12 @@ def read_requirements_file(filename):
         return [line.strip() for line in f]
 
 
-packages = find_packages()
+# packages = find_packages()
+packages = ["mujoco_py"]
 # Ensure that we don't pollute the global namespace.
 for p in packages:
-    assert p == 'mujoco_py' or p.startswith('mujoco_py.')
+    print(p)
+    # assert p == 'mujoco_py' or p.startswith('mujoco_py.')
 
 
 class Build(DistutilsBuild):
