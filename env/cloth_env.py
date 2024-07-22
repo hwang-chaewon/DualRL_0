@@ -63,7 +63,8 @@ class ClothEnv_(object):
         image_obs_noise_mean=1,
         image_obs_noise_std=0,
         has_viewer=True,
-        image_size=100,
+        #****************바꾼부분********************#
+        image_size=200,  #100
     ):
         #self: env.cloth_env.ClothEnv object
         self.albumentations_transform = A.Compose(
@@ -81,7 +82,6 @@ class ClothEnv_(object):
 
         self.model_kwargs_path = model_kwargs_path
         self.success_distance = success_distance
-        print("success distance: ", self.success_distance)
 
         self.process = psutil.Process(os.getpid())
         self.randomization_kwargs = randomization_kwargs
@@ -107,7 +107,6 @@ class ClothEnv_(object):
         self.image_obs_noise_mean = image_obs_noise_mean
         self.image_obs_noise_std = image_obs_noise_std
         self.robot_observation = robot_observation
-        print("robot_observation: ", self.robot_observation)
 
         self.max_close_steps = max_close_steps
         self.frame_stack = deque([], maxlen=self.frame_stack_size)
@@ -148,7 +147,6 @@ class ClothEnv_(object):
                                            1, shape=(3,), dtype='float32')
 
         self.relative_origin = self.get_ee_position_W()
-        print("relative_origin: ", self.relative_origin)
         self.goal, self.goal_noise = self.sample_goal_I()
 
         self.reset_camera()
@@ -170,6 +168,10 @@ class ClothEnv_(object):
             image=gym.spaces.Box(-np.inf, np.inf,
                                  shape=obs['image'].shape, dtype='float32')
         ))
+
+        #***************바꾼부분********************
+        # self.sim.model.nsite=25*25
+        # print("nsite: ", self.sim.model.nsite)
 
     def get_model_kwargs(self, randomize, rownum=None):
         df = pd.read_csv(self.model_kwargs_path)
@@ -238,22 +240,22 @@ class ClothEnv_(object):
         min_corner = 0
         max_corner = 8
         self.max_corner_name = f"B{max_corner}_{max_corner}"
+        
         self.mid_corner_index = 4
         mid = int(max_corner / 2)
         self.corner_index_mapping = {"0": f"S{min_corner}_{max_corner}", "1": f"S{max_corner}_{max_corner}",
                                      "2": f"S{min_corner}_{min_corner}", "3": f"S{max_corner}_{min_corner}"}
-        self.cloth_site_names = []
+        #****************바꾼부분****************#
         self.ee_origin_index_mapping = {"0": f"S-1_-1"}
         
-
+        self.cloth_site_names = []
         for i in [min_corner, mid, max_corner]:
             for j in [min_corner, mid, max_corner]:
                 self.cloth_site_names.append(f"S{i}_{j}")
 
         # TODO: remove side effects from methods,
-        # self.constraints = task_definitions.constraints["sideways"](
-        #     0, 4, 8, self.success_distance)
-        self.constraints = task_definitions.constraints["random_25"](
+        #*****************바꾼부분*****************
+        self.constraints = task_definitions.constraints["random_25"](   #"sideways"
             0, 4, 8, self.success_distance, -0, -0)
 
         self.task_reward_function = reward_calculation.get_task_reward_function(
@@ -265,6 +267,7 @@ class ClothEnv_(object):
         if self.has_viewer:
             if not self.viewer is None:
                 del self.viewer
+            #*****************바꾼부분*****************
             self.viewer = mujoco_py.MjRenderContextOffscreen(
                 self.sim, device_id=-1)
             # self.viewer = mujoco_py.MjRenderContextWindow(
@@ -273,6 +276,7 @@ class ClothEnv_(object):
             # self.sim)
             # self.viewer = mujoco_py.MjViewer(
             # self.sim)
+
             self.viewer.vopt.geomgroup[0] = 0
             self.viewer.vopt.geomgroup[1] = 1
 
@@ -326,6 +330,14 @@ class ClothEnv_(object):
 
         self.mjpy_model = mujoco_py.load_model_from_xml(temp_xml_2)
         del temp_xml_2
+
+        #***************바꾼부분*********************#
+        # current_addresses = self.mjpy_model.name_siteadr.copy()
+        # start_value = current_addresses[-1] + 5
+        # end_value = start_value + 5 * (625 - len(current_addresses))
+        # new_addresses = list(range(start_value, end_value, 5))
+        # self.mjpy_model.name_siteadr = np.append(self.mjpy_model.name_siteadr, new_addresses)
+        # self.mjpy_model.nsite=625  #원래: 87
 
         gc.collect()
         self.sim = mujoco_py.MjSim(self.mjpy_model)
@@ -448,15 +460,17 @@ class ClothEnv_(object):
         return flattened_corners
 
     def get_corner_constraint_distances(self):
-        ee_origin_index_mapping= {v: k for k,
+        inv_corner_index_mapping = {v: k for k,
                                     v in self.corner_index_mapping.items()}
         distances = {"0": 0, "1": 0, "2": 0, "3": 0}
         for i, contraint in enumerate(self.constraints):
-            origin_pos = self.relative_origin
-            target_pos = self.goal[i *
-                                    self.single_goal_dim:(i+1)*self.single_goal_dim]
-            distances[ee_origin_index_mapping[contraint['origin']]
-                        ] = np.linalg.norm(origin_pos-target_pos)
+            if contraint['origin'] in inv_corner_index_mapping.keys():
+                origin_pos = self.sim.data.get_site_xpos(
+                    contraint['origin']).copy() - self.relative_origin
+                target_pos = self.goal[i *
+                                       self.single_goal_dim:(i+1)*self.single_goal_dim]
+                distances[inv_corner_index_mapping[contraint['origin']]
+                          ] = np.linalg.norm(origin_pos-target_pos)
         return distances
 
     def post_action(self, obs, raw_action, cosine_distance):
@@ -624,9 +638,20 @@ class ClothEnv_(object):
 
     def get_cloth_edge_positions_W(self):
         positions = dict()
-        for i in range(26): #9
-            for j in range(26): #9
-                if (i in [0, 25]) or (j in [0, 25]):  #[0,8]
+        for i in range(9):
+            for j in range(9):
+                if (i in [0, 8]) or (j in [0, 8]):
+                    site_name = f"S{i}_{j}"
+                    positions[site_name] = self.sim.data.get_site_xpos(
+                        site_name).copy()
+        return positions
+    
+    #*****************바꾼부분*****************
+    def get_cloth_all_positions_W(self):
+        positions = dict()
+        for i in range(26):
+            for j in range(26):
+                if (i in [0, 25]) or (j in [0, 25]):
                     site_name = f"S{i}_{j}"
                     positions[site_name] = self.sim.data.get_site_xpos(
                         site_name).copy()
@@ -644,6 +669,7 @@ class ClothEnv_(object):
         width = self.randomization_kwargs['camera_config']['width']
         height = self.randomization_kwargs['camera_config']['height']
 
+        #*****************바꾼부분*****************
         self.viewer.render(width, height, camera_id)
         # self.viewer.render(self.sim)
         # self.viewer.render(self)
@@ -728,9 +754,6 @@ class ClothEnv_(object):
 
             goal[i*self.single_goal_dim: (i+1) *
                  self.single_goal_dim] = target_pos + offset - self.relative_origin
-            
-        # print("goal: ", goal)
-
         return goal.copy(), noise
 
     def reset_osc_values(self):
@@ -789,16 +812,29 @@ class ClothEnv_(object):
         return corners
 
     def get_edge_image_positions(self, w, h, camera_matrix, camera_transformation):
-        corners = []
+        edges = []
         cloth_edge_positions = self.get_cloth_edge_positions_W()
         for site in cloth_edge_positions.keys():
-            corner_in_image = np.ones(4)
-            corner_in_image[:3] = cloth_edge_positions[site]
-            corner = (camera_matrix @ camera_transformation) @ corner_in_image
-            u_c, v_c, _ = corner/corner[2]
-            corner = [w-u_c, v_c]
-            corners.append(corner)
-        return corners
+            edge_in_image = np.ones(4) #homogeneous 좌표를 저장하는 [x,y,z,1] 형태
+            edge_in_image[:3] = cloth_edge_positions[site] # [x,y,z] 부분 채우기: 위에서 가져온 get_cloth_edge_position으로 정하기
+            edge = (camera_matrix @ camera_transformation) @ edge_in_image
+            u_c, v_c, _ = edge/edge[2]
+            edge = [w-u_c, v_c]
+            edges.append(edge)
+        return edges
+    
+    #*****************바꾼부분*****************
+    def get_all_image_positions(self, w, h, camera_matrix, camera_transformation):
+        alls = []
+        cloth_all_positions = self.get_cloth_all_positions_W()
+        for site in cloth_all_positions.keys():
+            all_in_image = np.ones(4)
+            all_in_image[:3] = cloth_all_positions[site]
+            all = (camera_matrix @ camera_transformation) @ all_in_image
+            u_c, v_c, _ = all/all[2]
+            all = [w-u_c, v_c]
+            alls.append(all)
+        return alls
 
     def get_camera_matrices(self, camera_name, w, h):
         camera_id = self.sim.model.camera_name2id(camera_name)
@@ -819,6 +855,7 @@ class ClothEnv_(object):
         camera_matrix, camera_transformation = self.get_camera_matrices(
             camera, width, height)
         camera_id = self.sim.model.camera_name2id(camera)
+        #*****************바꾼부분*****************
         self.viewer.render(width, height, camera_id)
         # self.viewer.render(self.sim)
         # self.viewer.render(self)
@@ -838,6 +875,10 @@ class ClothEnv_(object):
         elif mask_type == "edges":
             mask = self.get_edge_image_positions(
                 width, height, camera_matrix, camera_transformation)
+        #*****************바꾼부분*****************
+        elif mask_type == "alls":
+            mask = self.get_all_image_positions(
+                width, height, camera_matrix, camera_transformation)
         else:
             mask = []
 
@@ -853,10 +894,13 @@ class ClothEnv_(object):
                 cv2.circle(data, (aux_u, aux_v), point_size, (0, 255, 0), -1)
 
         return data
+    
+    #*****************바꾼부분*****************
+    def capture_images(self, aux_output=None, mask_type="alls"):  # "corners"
 
-    def capture_images(self, aux_output=None, mask_type="corners"):
-        w_eval, h_eval = 500, 500
-        w_corners, h_corners = 500, 500
+        #*****************바꾼부분*****************
+        w_eval, h_eval = 1000, 1000   #500,500
+        w_corners, h_corners = 1000, 1000   #500,500
         w_cnn, h_cnn = self.image_size
         w_cnn_full, h_cnn_full = self.randomization_kwargs['camera_config'][
             'width'], self.randomization_kwargs['camera_config']['height']

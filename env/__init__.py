@@ -1,3 +1,4 @@
+#************************************#
 from gym.envs.registration import register
 from env.cloth_env import ClothEnv
 
