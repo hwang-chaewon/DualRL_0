@@ -5,7 +5,8 @@ import cv2
 import numpy as np
 import copy
 from gym.utils import seeding, EzPickle
-from utils import reward_calculation
+#***********바꾼부분***********#
+from utils import reward_calculation, reward_calculation_unfolding
 import gym
 import os
 from scipy import spatial
@@ -63,7 +64,7 @@ class ClothEnv_(object):
         image_obs_noise_mean=1,
         image_obs_noise_std=0,
         has_viewer=True,
-        #****************바꾼부분********************#
+        #****************바꾼부분: 시각화********************#
         image_size=200,  #100
     ):
         #self: env.cloth_env.ClothEnv object
@@ -151,7 +152,8 @@ class ClothEnv_(object):
 
         self.reset_camera()
 
-        image_obs = self.get_image_obs()
+        #*********바꾼부분***********#
+        image_obs, initial_image = self.get_image_obs()
         for _ in range(self.frame_stack_size):
             self.frame_stack.append(image_obs)
         obs = self.get_obs()
@@ -169,9 +171,9 @@ class ClothEnv_(object):
                                  shape=obs['image'].shape, dtype='float32')
         ))
 
-        #***************바꾼부분********************
-        # self.sim.model.nsite=25*25
-        # print("nsite: ", self.sim.model.nsite)
+        #***************바꾼부분: 보상********************
+        self.initial_img=initial_image
+        cv2.imwrite(os.path.join(os.path.dirname(os.path.abspath(__file__))+'_initial_img.png'), self.initial_img)
 
     def get_model_kwargs(self, randomize, rownum=None):
         df = pd.read_csv(self.model_kwargs_path)
@@ -245,21 +247,43 @@ class ClothEnv_(object):
         mid = int(max_corner / 2)
         self.corner_index_mapping = {"0": f"S{min_corner}_{max_corner}", "1": f"S{max_corner}_{max_corner}",
                                      "2": f"S{min_corner}_{min_corner}", "3": f"S{max_corner}_{min_corner}"}
-        #****************바꾼부분****************#
+        #****************바꾼부분: 시각화, 태스크****************#
         self.ee_origin_index_mapping = {"0": f"S-1_-1"}
         
+        #****************바꾼부분****************#
+        min_all = 0
+        max_all = 8
+        mid_all = int(max_all / 2)
         self.cloth_site_names = []
-        for i in [min_corner, mid, max_corner]:
-            for j in [min_corner, mid, max_corner]:
+        for i in range(max_all+1):  #[min_all, mid_all, max_all]
+            for j in range(max_all+1):   #[min_all, mid_all, max_all]
                 self.cloth_site_names.append(f"S{i}_{j}")
+        '''
+        cloth positions 
+        (0,0)->(-0.2, -0.2, -0.0565), (8,0)->(0,-0.2, -0.0565)
+        (0,8)->(-0.2. 0, -0.0565),    (8,8)->(0,0,-0.0565)
+
+        'S0_0': array([-0.19291728, -0.19604338, -0.05650418]),
+        'S0_4': array([-0.19291728, -0.09925238, -0.05650418]), 
+        'S0_8': array([-0.19291729, -0.00246128, -0.05650418]), 
+        'S4_0': array([-0.09612628, -0.19604338, -0.05650418]), 
+        'S4_4': array([-0.09612622, -0.09925231, -0.05650418]), 
+        'S4_8': array([-0.09612626, -0.00246128, -0.05650418]), 
+        'S8_0': array([ 0.00066471, -0.19604338, -0.05650418]), 
+        'S8_4': array([ 0.00066472, -0.09925235, -0.05650418]), 
+        'S8_8': array([ 0.00066471, -0.00246128, -0.0561613 ])
+        '''
 
         # TODO: remove side effects from methods,
-        #*****************바꾼부분*****************
-        self.constraints = task_definitions.constraints["random_25"](   #"sideways"
+        #*****************바꾼부분: 태스크*****************
+        #그러나, 이 부분은 안 쓰일 수도 있음. constraint의 모든 조건에 해당하는지는 내 설정에 맞지 않음
+        self.constraints = task_definitions.constraints["random_cloth"](   #"sideways"
             0, 4, 8, self.success_distance, -0, -0)
-
-        self.task_reward_function = reward_calculation.get_task_reward_function(
-            self.constraints, self.single_goal_dim, self.sparse_dense, self.success_reward, self.fail_reward, self.extra_reward)
+        
+        #*****************바꾼부분: 보상*****************
+        # self.task_reward_function = reward_calculation.get_task_reward_function(
+        #     self.constraints, self.single_goal_dim, self.sparse_dense, self.success_reward, self.fail_reward, self.extra_reward)
+        self.task_reward_function = reward_calculation_unfolding.get_unfolding_reward_function()
 
         return model_kwargs, model_numerical_values
 
@@ -330,14 +354,6 @@ class ClothEnv_(object):
 
         self.mjpy_model = mujoco_py.load_model_from_xml(temp_xml_2)
         del temp_xml_2
-
-        #***************바꾼부분*********************#
-        # current_addresses = self.mjpy_model.name_siteadr.copy()
-        # start_value = current_addresses[-1] + 5
-        # end_value = start_value + 5 * (625 - len(current_addresses))
-        # new_addresses = list(range(start_value, end_value, 5))
-        # self.mjpy_model.name_siteadr = np.append(self.mjpy_model.name_siteadr, new_addresses)
-        # self.mjpy_model.nsite=625  #원래: 87
 
         gc.collect()
         self.sim = mujoco_py.MjSim(self.mjpy_model)
@@ -434,7 +450,8 @@ class ClothEnv_(object):
                     (1-self.filter)*self.desired_pos_ctrl_W
             self.step_env()
             if i == image_obs_substep_idx:
-                image_obs = self.get_image_obs()
+                #**********바꾼부분*************#
+                image_obs, image_ = self.get_image_obs()
                 self.frame_stack.append(image_obs)
                 flattened_corners = self.post_action_image_capture()
 
@@ -443,8 +460,11 @@ class ClothEnv_(object):
         info['corner_positions'] = flattened_corners
         return obs, reward, done, info
 
-    def compute_task_reward(self, achieved_goal, desired_goal, info):
-        return self.task_reward_function(achieved_goal, desired_goal, info)
+    # def compute_task_reward(self, achieved_goal, desired_goal, info):
+    #     return self.task_reward_function(achieved_goal, desired_goal, info)
+    #**********바꾼부분: 보상***********#
+    def compute_task_reward(self, initial_img, cm):
+        return self.task_reward_function(initial_img, cm)
 
     def post_action_image_capture(self):
         camera_matrix, camera_transformation = self.get_camera_matrices(
@@ -628,6 +648,7 @@ class ClothEnv_(object):
         for site in self.cloth_site_names:
             positions[site] = self.sim.data.get_site_xpos(
                 site).copy() - self.relative_origin
+        # print("cloth positions: ", positions)
         return positions
 
     def get_cloth_position_W(self):
@@ -649,12 +670,11 @@ class ClothEnv_(object):
     #*****************바꾼부분*****************
     def get_cloth_all_positions_W(self):
         positions = dict()
-        for i in range(26):
-            for j in range(26):
-                if (i in [0, 25]) or (j in [0, 25]):
-                    site_name = f"S{i}_{j}"
-                    positions[site_name] = self.sim.data.get_site_xpos(
-                        site_name).copy()
+        for i in range(9):
+            for j in range(9):
+                site_name = f"S{i}_{j}"
+                positions[site_name] = self.sim.data.get_site_xpos(
+                    site_name).copy()
         return positions
 
     def get_cloth_velocity(self):
@@ -673,8 +693,11 @@ class ClothEnv_(object):
         self.viewer.render(width, height, camera_id)
         # self.viewer.render(self.sim)
         # self.viewer.render(self)
+
+        #*****************바꾼부분*****************
         image_obs = copy.deepcopy(
             self.viewer.read_pixels(width, height, depth=False))
+        image_obs2 = np.float32(image_obs[::-1, :, :]).copy()
 
         image_obs = image_obs[::-1, :, :]
 
@@ -693,7 +716,8 @@ class ClothEnv_(object):
         else:
             image_obs = cv2.cvtColor(image_obs, cv2.COLOR_BGR2GRAY)
 
-        return (image_obs / 255).flatten().copy()
+        #*********************바꾼부분***********#
+        return (image_obs / 255).flatten().copy(), image_obs2#data
 
     def get_obs(self):
         achieved_goal_I = np.zeros(self.single_goal_dim*len(self.constraints))
@@ -722,6 +746,9 @@ class ClothEnv_(object):
                 [self.previous_raw_action, np.zeros(6)])
         elif self.robot_observation == "none":
             robot_observation = np.zeros(9)
+        #****************바꾼부분*********************#
+        full_observation['initial_image'] = self.frame_stack[0]
+        
         full_observation['image'] = np.array(
             [image for image in self.frame_stack]).flatten()
         if self.randomization_kwargs["dynamics_randomization"]:
@@ -790,7 +817,8 @@ class ClothEnv_(object):
 
         self.episode_ee_close_steps = 0
 
-        image_obs = self.get_image_obs()
+        #**********바꾼부분*************#
+        image_obs, image_ = self.get_image_obs()
         for _ in range(self.frame_stack_size):
             self.frame_stack.append(image_obs)
 

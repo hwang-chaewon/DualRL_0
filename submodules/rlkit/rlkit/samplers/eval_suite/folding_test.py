@@ -1,9 +1,10 @@
+#***********바꾼부분**********************#
 from pandas.core import frame
 from rlkit.samplers.eval_suite.eval_suite import EvalTest
 import numpy as np
 import pandas as pd
 import os
-from rlkit.samplers.eval_suite.utils import create_real_corner_image_directories
+from rlkit.samplers.eval_suite.utils import *
 import cv2
 from collections import deque
 
@@ -12,7 +13,8 @@ class FoldingTest(EvalTest):
 
     def single_evaluation(self, eval_number: int) -> dict:
         print("Folding eval", eval_number)
-        create_real_corner_image_directories(self.base_save_folder, self.epoch)
+        #**************바꾼부분**************************#
+        create_area_image_directories(self.base_save_folder, self.epoch)
         image_dirs = ["up", "side", "front"]
 
         all_off = 0
