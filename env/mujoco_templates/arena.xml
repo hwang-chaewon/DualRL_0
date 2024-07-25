@@ -14,28 +14,28 @@
         <material name="floorplane" reflectance="0.01" shininess="0.0" specular="0.0" texrepeat="2 2" texture="texplane" texuniform="true"/>
         <material name="floorplane2" reflectance="0.01" shininess="0.0" specular="0.0" texrepeat="2 2" texture="texplane2" texuniform="true"/>
         <material name="floorplane3" reflectance="0.01" shininess="0.0" specular="0.0" texrepeat="2 2" texture="texplane2" texuniform="true"/>
-        <mesh name="link0" file="meshes/link0.stl" />
-        <mesh name="link1" file="meshes/link1.stl" />
-        <mesh name="link2" file="meshes/link2.stl" />
-        <mesh name="link3" file="meshes/link3.stl" />
-        <mesh name="link4" file="meshes/link4.stl" />
-        <mesh name="link5" file="meshes/link5.stl" />
-        <mesh name="link6" file="meshes/link6.stl" />
-        <mesh name="link7" file="meshes/link7.stl" />
-        <mesh name="link0_vis" file="meshes/link0_vis.stl" />
-        <mesh name="link1_vis" file="meshes/link1_vis.stl" />
-        <mesh name="link2_vis" file="meshes/link2_vis.stl" />
-        <mesh name="link3_vis" file="meshes/link3_vis.stl" />
-        <mesh name="link4_vis" file="meshes/link4_vis.stl" />
-        <mesh name="link5_vis" file="meshes/link5_vis.stl" />
-        <mesh name="link6_vis" file="meshes/link6_vis.stl" />
-        <mesh name="link7_vis" file="meshes/link7_vis.stl" />
-        <mesh name="finger_plastic" file="meshes/3dprinted_finger.stl" />
-        <mesh name="hand" file="meshes/hand.stl" />
-        <mesh name="hand_vis" file="meshes/hand_vis.stl" />
-        <mesh name="finger" file="meshes/finger.stl" />
-        <mesh name="finger_vis" file="meshes/finger_vis.stl" />
-        <mesh name="finger_vis2" file="meshes/finger_longer.stl" />
+        <mesh name="link0" file="meshes_ur5e/link0.stl" />
+        <mesh name="link1" file="meshes_ur5e/link1.stl" />
+        <mesh name="link2" file="meshes_ur5e/link2.stl" />
+        <mesh name="link3" file="meshes_ur5e/link3.stl" />
+        <mesh name="link4" file="meshes_ur5e/link4.stl" />
+        <mesh name="link5" file="meshes_ur5e/link5.stl" />
+        <mesh name="link6" file="meshes_ur5e/link6.stl" />
+        <mesh name="link7" file="meshes_ur5e/link7.stl" />
+        <mesh name="link0_vis" file="meshes_ur5e/link0_vis.stl" />
+        <mesh name="link1_vis" file="meshes_ur5e/link1_vis.stl" />
+        <mesh name="link2_vis" file="meshes_ur5e/link2_vis.stl" />
+        <mesh name="link3_vis" file="meshes_ur5e/link3_vis.stl" />
+        <mesh name="link4_vis" file="meshes_ur5e/link4_vis.stl" />
+        <mesh name="link5_vis" file="meshes_ur5e/link5_vis.stl" />
+        <mesh name="link6_vis" file="meshes_ur5e/link6_vis.stl" />
+        <mesh name="link7_vis" file="meshes_ur5e/link7_vis.stl" />
+        <mesh name="finger_plastic" file="meshes_ur5e/3dprinted_finger.stl" />
+        <mesh name="hand" file="meshes_ur5e/hand.stl" />
+        <mesh name="hand_vis" file="meshes_ur5e/hand_vis.stl" />
+        <mesh name="finger" file="meshes_ur5e/finger.stl" />
+        <mesh name="finger_vis" file="meshes_ur5e/finger_vis.stl" />
+        <mesh name="finger_vis2" file="meshes_ur5e/finger_longer.stl" />
 
 
         <texture name="bath_real_texture" type="2d" file="textures/cloth.png" />

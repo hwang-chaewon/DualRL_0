@@ -133,11 +133,11 @@ def argsparser():
 
     #***************바꾼부분*********************#
     # Train
-    parser.add_argument('--train-steps', default=100, type=int)  # Per cycle #1000
+    parser.add_argument('--train-steps', default=50, type=int)  # Per cycle #1000  #최소: 50
     parser.add_argument('--num-epochs', default=1, type=int)  #100
     parser.add_argument('--save-policy-every-epoch', default=1, type=int)
     parser.add_argument('--num-cycles', default=1, type=int)  # Per epoch #20
-    parser.add_argument('--num-eval-rollouts', type=int, default=10)  #20
+    parser.add_argument('--num-eval-rollouts', type=int, default=20)  #20
     parser.add_argument('--batch-size', type=int, default=256) #256
     parser.add_argument('--discount', type=float, default=0.99)
     parser.add_argument('--corner-prediction-loss-coef',
@@ -151,17 +151,18 @@ def argsparser():
 
     # Replay buffer
     parser.add_argument('--her-percent', default=0.8, type=float)
-    parser.add_argument('--buffer-size', default=1E5, type=int)
+    parser.add_argument('--buffer-size', default=1E5, type=int) #1E5(100000)
 
     # How many of the envs only execute demos
     parser.add_argument('--num-demoers', type=int, default=0)
 
+    #*********바꾼부분**************************
     # Maximum length for episode
-    parser.add_argument('--max-path-length', default=50,
-                        type=int)
+    parser.add_argument('--max-path-length', default=50, 
+                        type=int)  #50, 이거따라 image 저장할 수 있는 개수 늘어나는듯
 
     # Maximum number of steps the agent is within goal threshold i.e. the task is successful
-    parser.add_argument('--max-close-steps', default=10, type=int)
+    parser.add_argument('--max-close-steps', default=10, type=int)   #10
 
     # Domain randomization
     parser.add_argument('--lights-randomization', default=1, type=int)
@@ -212,10 +213,11 @@ def argsparser():
     parser.add_argument('--frame-stack-size', type=int, default=1)
     parser.add_argument('--sparse-dense', type=int, default=1)
     parser.add_argument('--goal-noise', type=float, default=0.03)
-    parser.add_argument('--success-reward', type=int, default=0)
-    parser.add_argument('--fail-reward', type=int, default=-1)
+    #***************바꾼부분**************************#
+    parser.add_argument('--success-reward', type=int, default=1)   #0
+    parser.add_argument('--fail-reward', type=int, default=0)  #-1
     # For sparse dense i.e. extra for being closer to the goal
-    parser.add_argument('--extra-reward', type=int, default=1)
+    parser.add_argument('--extra-reward', type=int, default=2) #1
     # Mujoco timestep length
     parser.add_argument('--timestep', type=float, default=0.01)
     # Control frequncy in Hz
@@ -375,7 +377,6 @@ def get_policy_kwargs(args):
     )
     return policy_kwargs
 
-#************************************#
 def get_variant(args, algorithm):
     title = args.title + "-run-" + str(args.run)
     save_folder = os.path.join(os.path.abspath("./"), "trainings", title)

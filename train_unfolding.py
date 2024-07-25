@@ -20,6 +20,10 @@ from rlkit.samplers.eval_suite import folding_test
 from rlkit.samplers import data_collector
 from rlkit.data_management import future_obs_dict_replay_buffer
 
+#**********바꾼부분: CUDA error*******************#
+import os
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+
 
 torch.cuda.empty_cache()
 gym.logger.set_level(50)

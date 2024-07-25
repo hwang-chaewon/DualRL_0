@@ -8,6 +8,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 print(current_dir)
 sys.path.append(current_dir)
 
+# sys.path.append("..")
+
 import cv2
 import numpy as np
 import torch
@@ -18,14 +20,24 @@ from Segment_Anything.segment_anything import SamPredictor, sam_model_registry
 from Depth_Anything.depth_anything.dpt import DepthAnything
 from Depth_Anything.depth_anything.util.transform import Resize, NormalizeImage, PrepareForNet
 
+from PIL import Image
+from MiDaS.midas.dpt_depth import DPTDepthModel
+
 from env import cloth_env
 
-DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+# DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+DEVICE = 'cpu'
 
 # 참고: https://github.com/LiheYoung/Depth-Anything
 def get_depth_map(img):
-    # load predefined model
+    # load predefined model-http
     depth_anything = DepthAnything.from_pretrained('LiheYoung/depth_anything_{}14'.format('vitl')).to(DEVICE).eval()  #'vits', 'vitb', 'vitl'
+    # load predefined model-local
+    # local_model_dir="/home/hcw/DualRL/utils/Depth_Anything/pretrained"
+    # local_model_path="/home/hcw/DualRL/utils/Depth_Anything/pretrained/pytorch_model.bin"
+    # local_config_path="/home/hcw/DualRL/utils/Depth_Anything/pretrained/config.json"
+    # depth_anything = DepthAnything.from_pretrained(local_model_dir).to(DEVICE).eval()
+    
     # image를 model에 입력하기 전 필요한 transformation 설정
     transform = Compose([
         Resize(
@@ -49,21 +61,38 @@ def get_depth_map(img):
     # image를 model에 입력해 depth 예측
     with torch.no_grad():
         depth = depth_anything(image)
-    # 원래 image크기로 만들고, [0,255] 범위로 정규화
+    # 원래 image크기로 만들고, [0,1] 범위로 정규화 #[0,255] 범위로 정규화
     depth = F.interpolate(depth[None], (h, w), mode='bilinear', align_corners=False)[0, 0]
-    depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
+    depth = (depth - depth.min()) / (depth.max() - depth.min()) #* 255.0
     depth = depth.cpu().numpy().astype(np.uint8)
 
     # 흑백 or 컬러
     # depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-    depth = cv2.applyColorMap(depth, cv2.COLORMAP_INFERNO)
+    depth = cv2.applyColorMap(depth, cv2.COLORMAP_INFERNO) #colot로 하면 mask와 shape이 안 맞아서 다른 함수에서 에러 발생
 
+    print("depth map 계산 완료===================================")
+
+    return depth
+
+def get_depth_map2(img):
+    model = DPTDepthModel(path="/home/hcw/DualRL/utils/MiDaS/weights/dpt_beit_base_384.pt", backbone="beitl16_384", non_negative=True)
+    model.eval()
+    transform = Compose([
+               Resize((384, 384)),
+               NormalizeImage(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+               PrepareForNet(),
+               ])
+    img_input = transform(img).unsqueeze(0)
+    with torch.no_grad():
+        depth = model(img_input)
+    depth = depth.squeeze().cpu().numpy()
+    print("depth in depth function: ", depth)
     return depth
 
 # 참고: https://github.com/Victorlouisdg/cloth-competition/blob/main/evaluation-service/backend/main.py
 # 참고: https://github.com/facebookresearch/segment-anything
 def segment(img):
-    sam_checkpoint = "sam_vit_h_4b8939.pth"
+    sam_checkpoint = "/home/hcw/DualRL/utils/Segment_Anything/sam_vit_h_4b8939.pth"
     model_type = "vit_h"
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     sam.to(device=DEVICE)  #"cpu"/"gpu"
@@ -87,31 +116,51 @@ def segment(img):
         if score>max_score:
             max_score=score
             return_mask=mask
+    print("mask 계산 완료, max_score: ",max_score)
     return return_mask
 
 # 참고: https://github.com/Victorlouisdg/cloth-competition/blob/main/evaluation-service/backend/compute_area.py
 def compute_areas_for_image(depth_img, mask_img, fx, fy, cx, cy):
     depth_map = depth_img
     mask = mask_img
+    # print("mask in compute area: ", mask)
+    if depth_map.shape[2] == 3:
+        depth_map = np.mean(depth_map, axis=2).astype(depth_map.dtype)
+    # mask가 0보다 큰 위치에만 depth_map의 값을 유지하고, 나머지는 0으로
     masked_depth_map = np.where(mask > 0, depth_map, 0)
+    # print("masked_depth_map: ", masked_depth_map)
     masked_values = masked_depth_map[mask > 0]
+    # print("masked_values: ", masked_values)
     mean = np.mean(masked_values)
+    # print("mean: ", mean)
     lower_bound = mean - 0.5
     upper_bound = mean + 0.5
+    # print("lower_bound,upper_bound : ", lower_bound,upper_bound)
     masked_depth_map = np.where(
         (masked_depth_map > lower_bound) & (masked_depth_map < upper_bound), masked_depth_map, 0
     )
+    # print("masked_depth_map2: ", masked_depth_map)
+    masked_values = masked_depth_map[(masked_depth_map > lower_bound) & (masked_depth_map < upper_bound)]
+    # print("masked_values2: ", masked_values)
     x, y = np.meshgrid(np.arange(masked_depth_map.shape[1]), np.arange(masked_depth_map.shape[0]))
+    # print("x, y: ", x,y)
+    # print("cx, cy, fx, fy: ",cx, cy, fx, fy)
     X1 = (x - 0.5 - cx) * masked_depth_map / fx
     Y1 = (y - 0.5 - cy) * masked_depth_map / fy
     X2 = (x + 0.5 - cx) * masked_depth_map / fx
     Y2 = (y + 0.5 - cy) * masked_depth_map / fy
+    # print("X1, Y1, X2, Y2: ", X1, Y1, X2, Y2)
     pixel_areas = np.abs((X2 - X1) * (Y2 - Y1))
+    # print("pixel_areas: ", pixel_areas)
     pixel_areas_masked = np.where(mask > 0, pixel_areas, 0)
+    # print("pixel_areas_masked: ", pixel_areas_masked)
+    masked_pixel_values = pixel_areas_masked[pixel_areas_masked > 0]
+    # print("masked_pixel_values: ", masked_pixel_values)
     # Normalize the pixel areas to the range 0-255
     pixel_areas_normalized = cv2.normalize(
         pixel_areas_masked, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U
     )
+    # print("pixel_areas_normalized: ", pixel_areas_normalized)
     return pixel_areas_normalized, X1, X2, Y1, Y2
 
 def get_area_reward(img, camera_matrix):
@@ -130,17 +179,17 @@ def get_area_reward(img, camera_matrix):
     area, X1,X2,Y1,Y2=compute_areas_for_image(depth_map, mask, cm[0,0], cm[1,1], cm[0,2], cm[1,2])
     return area
 
-def get_folding_reward_function():
-    def folding_reward_function(img, camera_matrix):
+def get_unfolding_reward_function():
+    def unfolding_reward_function(img, camera_matrix):
         cm=camera_matrix
         mask=segment(img)
         depth_map=get_depth_map(img)
         area, X1,X2,Y1,Y2=compute_areas_for_image(depth_map, mask, cm[0,0], cm[1,1], cm[0,2], cm[1,2])
         return area
-    return folding_reward_function
+    return unfolding_reward_function
 
-def get_unfolding_reward_function():
-    def unfolding_reward_function(pre_img, pre_cm, post_img, post_cm):
+def get_folding_reward_function():
+    def folding_reward_function(pre_img, pre_cm, post_img, post_cm):
         area_pre, X1_pre,X2_pre,Y1_pre,Y2_pre=get_area_reward(pre_img, pre_cm)
         area_post, X1_post,X2_post,Y1_post,Y2_post=get_area_reward(post_img, post_cm)
         X_m_pre=(X1_pre+X2_pre)/2
@@ -151,4 +200,4 @@ def get_unfolding_reward_function():
         reward_2=(abs(X2_pre-X2_post)+abs(Y2_pre-Y2_post)+abs(X_m_pre-X_m_post)+abs(Y_m_pre-Y_m_post))/4
         return 2/(reward_1+reward_2) #차이를 최소화할 때 reward가 높아지도록
     
-    return unfolding_reward_function
+    return folding_reward_function

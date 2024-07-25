@@ -9,21 +9,21 @@
         <motor joint="joint6" name="torq_j6"/>
     </actuator>
     <asset>
-        <mesh name="link0" file="meshes/base.stl" />
-        <mesh name="link1" file="meshes/shoulder.stl" />
-        <mesh name="link2" file="meshes/upperarm.stl" />
-        <mesh name="link3" file="meshes/forearm.stl" />
-        <mesh name="link4" file="meshes/wrist1.stl" />
-        <mesh name="link5" file="meshes/wrist2.stl" />
-        <mesh name="link6" file="meshes/wrist3.stl" />
-        <mesh name="link0_vis" file="meshes/base_vis.stl" />
-        <mesh name="link1_vis" file="meshes/shoulder_vis.stl" />
-        <mesh name="link2_vis" file="meshes/upperarm_vis.stl" />
-        <mesh name="link3_vis" file="meshes/forearm_vis.stl" />
-        <mesh name="link4_vis" file="meshes/wrist1_vis.stl" />
-        <mesh name="link5_vis" file="meshes/wrist2_vis.stl" />
-        <mesh name="link6_vis" file="meshes/wrist3_vis.stl" />
-        <mesh name="finger" file="meshes/robotiq_fts300.stl" />
+        <mesh name="link0" file="meshes_ur5e/base.stl" />
+        <mesh name="link1" file="meshes_ur5e/shoulder.stl" />
+        <mesh name="link2" file="meshes_ur5e/upperarm.stl" />
+        <mesh name="link3" file="meshes_ur5e/forearm.stl" />
+        <mesh name="link4" file="meshes_ur5e/wrist1.stl" />
+        <mesh name="link5" file="meshes_ur5e/wrist2.stl" />
+        <mesh name="link6" file="meshes_ur5e/wrist3.stl" />
+        <mesh name="link0_vis" file="meshes_ur5e/base_vis.stl" />
+        <mesh name="link1_vis" file="meshes_ur5e/shoulder_vis.stl" />
+        <mesh name="link2_vis" file="meshes_ur5e/upperarm_vis.stl" />
+        <mesh name="link3_vis" file="meshes_ur5e/forearm_vis.stl" />
+        <mesh name="link4_vis" file="meshes_ur5e/wrist1_vis.stl" />
+        <mesh name="link5_vis" file="meshes_ur5e/wrist2_vis.stl" />
+        <mesh name="link6_vis" file="meshes_ur5e/wrist3_vis.stl" />
+        <mesh name="finger" file="meshes_ur5e/robotiq_fts300.stl" />
         
     </asset>
     <worldbody>

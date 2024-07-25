@@ -24,6 +24,9 @@ class SuccessRateTest(EvalTest):
         o = self.env.reset()
         d = False
         success = False
+
+        #*********바꾼부분**************************#
+        # while path_length < 100:
         while path_length < self.max_path_length:
             o_for_agent = self.obs_preprocessor(o)
             a, _, aux_output = self.policy.get_action(o_for_agent)
@@ -33,10 +36,14 @@ class SuccessRateTest(EvalTest):
                 image = image.reshape((-1, 100, 100))*255
                 cv2.imwrite(
                     f"{self.base_save_folder}/epochs/{self.epoch}/{self.name}/blurred_cnn/{str(path_length).zfill(3)}.png", image[0])
-
-            if save_images:
-                save_regular_images(
-                    self.env, self.base_save_folder, self.name, self.epoch, path_length, aux_output)
+                
+            #**********바꾼부분**********************#
+            # if save_images:
+            #     save_regular_images(
+            #         self.env, self.base_save_folder, self.name, self.epoch, path_length, aux_output)
+            save_regular_images(
+                self.env, self.base_save_folder, self.name, self.epoch, path_length, aux_output)
+            print("path_length: ", path_length)
 
             next_o, r, d, env_info = self.env.step(copy.deepcopy(a))
 

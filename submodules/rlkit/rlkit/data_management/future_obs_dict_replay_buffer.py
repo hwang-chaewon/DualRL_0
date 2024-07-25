@@ -187,6 +187,8 @@ class FutureObsDictRelabelingBuffer(ReplayBuffer):
         self._size = min(self._size + path_len, self.max_size)
 
     def _sample_indices(self, batch_size):
+        print("size: ", self._size)
+        print("batch_size: ", batch_size)
         return np.random.randint(0, self._size, batch_size)
 
     def random_batch(self, batch_size):

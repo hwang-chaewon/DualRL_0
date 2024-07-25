@@ -8,8 +8,8 @@ from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
 import sys
 import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
-print(current_dir)
 sys.path.append(current_dir)
+
 from blocks import FeatureFusionBlock, _make_scratch
 
 
@@ -150,7 +150,7 @@ class DPT_DINOv2(nn.Module):
         
         # in case the Internet connection is not stable, please load the DINOv2 locally
         if localhub:
-            self.pretrained = torch.hub.load('torchhub/facebookresearch_dinov2_main', 'dinov2_{:}14'.format(encoder), source='local', pretrained=False)
+            self.pretrained = torch.hub.load('/home/hcw/DualRL/utils/Depth_Anything/torchhub/facebookresearch_dinov2_main', 'dinov2_{:}14'.format(encoder), source='local', pretrained=False)
         else:
             self.pretrained = torch.hub.load('facebookresearch/dinov2', 'dinov2_{:}14'.format(encoder))
         

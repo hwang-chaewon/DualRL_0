@@ -460,11 +460,11 @@ class ClothEnv_(object):
         info['corner_positions'] = flattened_corners
         return obs, reward, done, info
 
+    #**********바꾼부분: 보상***********#
     # def compute_task_reward(self, achieved_goal, desired_goal, info):
     #     return self.task_reward_function(achieved_goal, desired_goal, info)
-    #**********바꾼부분: 보상***********#
-    def compute_task_reward(self, initial_img, cm):
-        return self.task_reward_function(initial_img, cm)
+    def compute_task_reward(self, img, cm):
+        return self.task_reward_function(img, cm)
 
     def post_action_image_capture(self):
         camera_matrix, camera_transformation = self.get_camera_matrices(
@@ -494,17 +494,25 @@ class ClothEnv_(object):
         return distances
 
     def post_action(self, obs, raw_action, cosine_distance):
-        reward = self.compute_task_reward(np.reshape(
-            obs['achieved_goal'], (1, -1)), np.reshape(self.goal, (1, -1)), dict())[0]
+        #***********바꾼부분: 보상******************#
+        # reward = self.compute_task_reward(np.reshape(
+        #     obs['achieved_goal'], (1, -1)), np.reshape(self.goal, (1, -1)), dict())[0]
+        camera_matrix, camera_transformation = self.get_camera_matrices(
+            self.train_camera, self.image_size[0], self.image_size[1])
+        image_obs, image = self.get_image_obs()
+        reward = self.compute_task_reward(image, camera_matrix)
+
         is_success = reward > self.fail_reward
 
         delta_size = np.linalg.norm(raw_action)
         ctrl_error = np.linalg.norm(
             self.desired_pos_ctrl_W - self.get_ee_position_W())
-
-        if is_success and self.episode_ee_close_steps == 0:
+        
+        #*********바꾼부분**********#
+        if np.any(is_success) and self.episode_ee_close_steps == 0: #if is_success and self.episode_ee_close_steps == 0:
             logger.debug(
-                f"Successful fold, reward: {np.round(reward, decimals=3)}")
+                # f"Successful fold, reward: {np.round(reward, decimals=3)}")
+                f"Successful fold")
 
         env_memory_usage = self.process.memory_info().rss
         info = {
@@ -695,11 +703,11 @@ class ClothEnv_(object):
         # self.viewer.render(self)
 
         #*****************바꾼부분*****************
-        image_obs = copy.deepcopy(
+        image_obs2 = copy.deepcopy(
             self.viewer.read_pixels(width, height, depth=False))
-        image_obs2 = np.float32(image_obs[::-1, :, :]).copy()
+        # image_obs2 = np.float32(image_obs[::-1, :, :]).copy()
 
-        image_obs = image_obs[::-1, :, :]
+        image_obs = image_obs2[::-1, :, :]
 
         height_start = int(image_obs.shape[0]/2 - self.image_size[1]/2)
         height_end = height_start + self.image_size[1]
@@ -915,11 +923,12 @@ class ClothEnv_(object):
             v = int(point[1])
             cv2.circle(data, (u, v), point_size, (255, 0, 0), -1)
 
-        if not aux_output is None:
-            for aux_idx in range(4):
-                aux_u = int(aux_output.flatten()[aux_idx*2]*width)
-                aux_v = int(aux_output.flatten()[aux_idx*2+1]*height)
-                cv2.circle(data, (aux_u, aux_v), point_size, (0, 255, 0), -1)
+        #*****************바꾼부분*****************
+        # if not aux_output is None:
+        #     for aux_idx in range(4):
+        #         aux_u = int(aux_output.flatten()[aux_idx*2]*width)
+        #         aux_v = int(aux_output.flatten()[aux_idx*2+1]*height)
+        #         cv2.circle(data, (aux_u, aux_v), point_size, (0, 255, 0), -1)
 
         return data
     
@@ -929,24 +938,26 @@ class ClothEnv_(object):
         #*****************바꾼부분*****************
         w_eval, h_eval = 1000, 1000   #500,500
         w_corners, h_corners = 1000, 1000   #500,500
-        w_cnn, h_cnn = self.image_size
+        w_cnn, h_cnn = 1000,1000 #self.image_size
+        # w_cnn_full, h_cnn_full = self.randomization_kwargs['camera_config'][
+        #     'width'], self.randomization_kwargs['camera_config']['height']
         w_cnn_full, h_cnn_full = self.randomization_kwargs['camera_config'][
-            'width'], self.randomization_kwargs['camera_config']['height']
+            'width']*2, self.randomization_kwargs['camera_config']['height']*2
 
         ee_in_image = np.ones(4)
         ee_pos = self.get_ee_position_W()
         ee_in_image[:3] = ee_pos
 
         corner_image = self.get_masked_image(
-            self.train_camera, w_corners, h_corners, ee_in_image, aux_output, 8, greyscale=False, mask_type=mask_type)
+            self.train_camera, w_corners, h_corners, ee_in_image, aux_output, 6, greyscale=False, mask_type=mask_type)  #8
         eval_image = self.get_masked_image(
-            self.eval_camera, w_eval, h_eval, ee_in_image, None, 4, greyscale=False, mask_type=mask_type)
+            self.eval_camera, w_eval, h_eval, ee_in_image, None, 3, greyscale=False, mask_type=mask_type) #4
         cnn_color_image_full = self.get_masked_image(
-            self.train_camera, w_cnn_full, h_cnn_full, ee_in_image, aux_output, 2, mask_type=mask_type)
+            self.train_camera, w_cnn_full, h_cnn_full, ee_in_image, aux_output, 2, mask_type=mask_type) #2
         cnn_color_image = self.get_masked_image(
-            self.train_camera, w_cnn, h_cnn, ee_in_image, aux_output, 2, mask_type=mask_type)
+            self.train_camera, w_cnn, h_cnn, ee_in_image, aux_output, 2, mask_type=mask_type) #2
         cnn_image = self.get_masked_image(
-            self.train_camera, w_cnn, h_cnn, ee_in_image, aux_output, 2, greyscale=True, mask_type=mask_type)
+            self.train_camera, w_cnn, h_cnn, ee_in_image, aux_output, 2, greyscale=True, mask_type=mask_type) #2
 
         return corner_image, eval_image, cnn_color_image_full, cnn_color_image, cnn_image
 
